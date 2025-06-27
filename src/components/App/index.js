@@ -4,10 +4,9 @@ import axios from 'axios';
 function App() {
   const [drugName, setDrugName] = useState('');
   const [location, setLocation] = useState('Nationwide');
-  const [results, setResults] = useState([]);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [sortBy, setSortBy] = useState('name');
 
   // Mock pricing data by RXCUI and location
   const mockPrices = {
@@ -43,6 +42,7 @@ function App() {
   const fetchDrugInfo = async () => {
     setLoading(true);
     setError(null);
+    setResult(null);
     try {
       const response = await axios.get(`https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(drugName)}`);
       console.log('Raw API Response:', response.data);
@@ -52,16 +52,12 @@ function App() {
       }
       const rxcui = idGroup.rxnormId[0];
       const price = mockPrices[rxcui]?.[location] || 0.00;
-      const newResult = {
+      setResult({
         name: idGroup.name || drugName,
         rxcui,
         price,
         location,
-      };
-      setResults(prev => [...prev, newResult].sort((a, b) =>
-        sortBy === 'name' ? a.name.localeCompare(b.name) :
-        sortBy === 'price' ? a.price - b.price : 0
-      ));
+      });
     } catch (err) {
       setError(`Error: ${err.message}`);
       console.error('Error Details:', err);
@@ -94,36 +90,15 @@ function App() {
         </select>
         <button onClick={fetchDrugInfo}>Search</button>
       </div>
-      <div className="sort-controls">
-        <label>Sort by: </label>
-        <select onChange={(e) => setSortBy(e.target.value)} value={sortBy}>
-          <option value="name">Name</option>
-          <option value="price">Price</option>
-        </select>
-      </div>
       {loading && <div className="spinner">Loading...</div>}
       {error && <p className="error">{error}</p>}
-      {results.length > 0 && (
-        <table className="results-table">
-          <thead>
-            <tr>
-              <th>Drug Name</th>
-              <th>RXCUI</th>
-              <th>Price</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((result, index) => (
-              <tr key={index}>
-                <td>{result.name}</td>
-                <td>{result.rxcui}</td>
-                <td>${result.price.toFixed(2)}</td>
-                <td>{result.location}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {result && (
+        <div className="result-card">
+          <h2>{result.name}</h2>
+          <p><strong>RXCUI:</strong> {result.rxcui}</p>
+          <p><strong>Price:</strong> ${result.price.toFixed(2)}</p>
+          <p><strong>Location:</strong> {result.location}</p>
+        </div>
       )}
     </div>
   );
