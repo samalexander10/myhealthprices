@@ -12,6 +12,40 @@ h1 {
   color: #333;
   text-align: center;
 }
+.layout {
+  display: flex;
+  gap: 20px;
+}
+.filter-panel {
+  width: 200px;
+}
+.filter-panel h3 {
+  margin: 0 0 10px;
+  color: #333;
+}
+.location-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.location-item {
+  padding: 10px;
+  cursor: pointer;
+  color: #555;
+  font-size: 16px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+.location-item:hover {
+  background-color: #e9ecef;
+}
+.location-item.active {
+  background-color: #007bff;
+  color: white;
+}
+.main-content {
+  flex: 1;
+}
 .search-bar {
   display: flex;
   justify-content: center;
@@ -23,14 +57,6 @@ h1 {
   border: 1px solid #ccc;
   border-radius: 4px 0 0 4px;
   width: 300px;
-}
-.search-bar select {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-left: none;
-  border-right: none;
-  background-color: white;
 }
 .search-bar button {
   padding: 10px 20px;
@@ -53,13 +79,16 @@ h1 {
   text-align: center;
   color: #d9534f;
 }
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
 .result-card {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  margin: 20px auto;
 }
 .result-card h2 {
   margin: 0 0 10px;
@@ -73,4 +102,20 @@ h1 {
 }
 .result-card p strong {
   color: #333;
+}
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  .filter-panel {
+    width: 100%;
+  }
+  .location-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .location-item {
+    flex: 1 0 100px;
+  }
 }
