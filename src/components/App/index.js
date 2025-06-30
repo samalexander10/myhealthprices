@@ -8,32 +8,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mock pricing data by RXCUI and location
-  const mockPrices = {
-    5640: { // ibuprofen
-      Nationwide: 5.99,
-      California: 6.49,
-      'New York': 6.29,
-      Texas: 5.79,
-    },
-    153165: { // lipitor
-      Nationwide: 12.49,
-      California: 13.99,
-      'New York': 13.49,
-      Texas: 12.29,
-    },
-    308135: { // amoxicillin
-      Nationwide: 8.99,
-      California: 9.49,
-      'New York': 9.29,
-      Texas: 8.79,
-    },
-    68382: { // metformin
-      Nationwide: 4.50,
-      California: 4.99,
-      'New York': 4.79,
-      Texas: 4.39,
-    },
+  // Mock location-based price adjustments
+  const locationAdjustments = {
+    Nationwide: 1.0,
+    California: 1.1,
+    'New York': 1.08,
+    Texas: 0.95,
   };
 
   // Available locations for filter
@@ -58,29 +38,28 @@ function App() {
     setError(null);
     setResults([]);
     try {
-      const response = await axios.get(`https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(drugName)}`);
-      console.log('Raw API Response:', response.data);
-      const idGroup = response.data.idGroup;
-      if (!idGroup || !idGroup.rxnormId) {
-        throw new Error('No drug data found. Try: ibuprofen, lipitor, amoxicillin, metformin.');
+      const response = await axios.get(`/api/drugs?name=${encodeURIComponent(drugName)}`);
+      console.log('API Response:', response.data);
+      if (response.data.error) {
+        throw new Error(response.data.error);
       }
-      const rxcui = idGroup.rxnormId[0];
+      const drug = response.data[0];
+      const basePrice = drug.nadac_price || 0.00;
       const newResults = selectedLocations.map(location => ({
-        name: idGroup.name || drugName,
-        rxcui,
-        price: mockPrices[rxcui]?.[location] || 0.00,
+        name: drug.drug_name,
+        ndc: drug.ndc,
+        price: (basePrice * (locationAdjustments[location] || 1.0)).toFixed(2),
         location,
       }));
       setResults(newResults);
     } catch (err) {
-      setError(`Error: ${err.message}`);
+      setError(`Error: ${err.message}. Try a more specific name, e.g., "IBUPROFEN 200 MG CAPSULE".`);
       console.error('Error Details:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Automatically fetch results when selectedLocations or drugName changes
   useEffect(() => {
     if (drugName.trim() && selectedLocations.length > 0) {
       fetchDrugInfo();
@@ -121,7 +100,7 @@ function App() {
               value={drugName}
               onChange={(e) => setDrugName(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter drug name (e.g., ibuprofen)"
+              placeholder="Enter drug name (e.g., IBUPROFEN 200 MG CAPSULE)"
             />
             <button onClick={fetchDrugInfo}>Search</button>
           </div>
@@ -132,8 +111,8 @@ function App() {
               {results.map((result, index) => (
                 <div key={index} className="result-card">
                   <h2>{result.name}</h2>
-                  <p><strong>RXCUI:</strong> {result.rxcui}</p>
-                  <p><strong>Price:</strong> ${result.price.toFixed(2)}</p>
+                  <p><strong>NDC:</strong> {result.ndc}</p>
+                  <p><strong>Price:</strong> ${result.price}</p>
                   <p><strong>Location:</strong> {result.location}</p>
                 </div>
               ))}
