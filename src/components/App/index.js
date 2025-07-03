@@ -8,16 +8,115 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mock location-based price adjustments
+  // Mock location-based price adjustments for all 50 U.S. states
   const locationAdjustments = {
     Nationwide: 1.0,
+    Alabama: 0.95,
+    Alaska: 1.15,
+    Arizona: 1.02,
+    Arkansas: 0.94,
     California: 1.1,
+    Colorado: 1.03,
+    Connecticut: 1.08,
+    Delaware: 1.05,
+    Florida: 1.04,
+    Georgia: 1.01,
+    Hawaii: 1.2,
+    Idaho: 0.97,
+    Illinois: 1.06,
+    Indiana: 0.99,
+    Iowa: 0.96,
+    Kansas: 0.95,
+    Kentucky: 0.94,
+    Louisiana: 0.97,
+    Maine: 1.07,
+    Maryland: 1.08,
+    Massachusetts: 1.09,
+    Michigan: 1.02,
+    Minnesota: 1.03,
+    Mississippi: 0.93,
+    Missouri: 0.96,
+    Montana: 0.98,
+    Nebraska: 0.95,
+    Nevada: 1.05,
+    'New Hampshire': 1.07,
+    'New Jersey': 1.09,
+    'New Mexico': 0.99,
     'New York': 1.08,
+    'North Carolina': 1.01,
+    'North Dakota': 0.97,
+    Ohio: 1.0,
+    Oklahoma: 0.96,
+    Oregon: 1.04,
+    Pennsylvania: 1.06,
+    'Rhode Island': 1.08,
+    'South Carolina': 1.0,
+    'South Dakota': 0.96,
+    Tennessee: 0.98,
     Texas: 0.95,
+    Utah: 0.99,
+    Vermont: 1.07,
+    Virginia: 1.05,
+    Washington: 1.06,
+    'West Virginia': 0.94,
+    Wisconsin: 1.02,
+    Wyoming: 0.97,
   };
 
   // Available locations for filter
-  const locations = ['Nationwide', 'California', 'New York', 'Texas'];
+  const locations = [
+    'Nationwide',
+    'Alabama',
+    'Alaska',
+    'Arizona',
+    'Arkansas',
+    'California',
+    'Colorado',
+    'Connecticut',
+    'Delaware',
+    'Florida',
+    'Georgia',
+    'Hawaii',
+    'Idaho',
+    'Illinois',
+    'Indiana',
+    'Iowa',
+    'Kansas',
+    'Kentucky',
+    'Louisiana',
+    'Maine',
+    'Maryland',
+    'Massachusetts',
+    'Michigan',
+    'Minnesota',
+    'Mississippi',
+    'Missouri',
+    'Montana',
+    'Nebraska',
+    'Nevada',
+    'New Hampshire',
+    'New Jersey',
+    'New Mexico',
+    'New York',
+    'North Carolina',
+    'North Dakota',
+    'Ohio',
+    'Oklahoma',
+    'Oregon',
+    'Pennsylvania',
+    'Rhode Island',
+    'South Carolina',
+    'South Dakota',
+    'Tennessee',
+    'Texas',
+    'Utah',
+    'Vermont',
+    'Virginia',
+    'Washington',
+    'West Virginia',
+    'Wisconsin',
+    'Wyoming',
+  ];
 
   const toggleLocation = (location) => {
     setSelectedLocations(prev =>
@@ -53,7 +152,7 @@ function App() {
       }));
       setResults(newResults);
     } catch (err) {
-      setError(`Error: ${err.message}. Try a more specific name, e.g., "IBUPROFEN 200 MG CAPSULE".`);
+      setError(`Error: ${err.message}. Try a specific name, e.g., "IBUPROFEN 200 MG CAPSULE".`);
       console.error('Error Details:', err);
     } finally {
       setLoading(false);

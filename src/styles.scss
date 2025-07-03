@@ -18,6 +18,8 @@ h1 {
 }
 .filter-panel {
   width: 200px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 .filter-panel h3 {
   margin: 0 0 10px;
@@ -29,10 +31,10 @@ h1 {
   margin: 0;
 }
 .location-item {
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
   color: #555;
-  font-size: 16px;
+  font-size: 14px;
   border-radius: 4px;
   transition: background-color 0.2s;
 }
@@ -109,6 +111,7 @@ h1 {
   }
   .filter-panel {
     width: 100%;
+    max-height: 300px;
   }
   .location-list {
     display: flex;
