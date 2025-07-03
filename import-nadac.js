@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Connect to MongoDB Atlas with increased timeout
-mongoose.connect('mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.yoafnzw.mongodb.net/?retryWrites=true&w=majority&appName=myhealthprices', {
+mongoose.connect('mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.yoafnzw.mongodb.net/myhealthprices?retryWrites=true&w=majority', {
   serverSelectionTimeoutMS: 30000, // 30 seconds
 }).then(() => {
   console.log('Connected to MongoDB Atlas');
@@ -37,7 +37,6 @@ const importData = async () => {
     fs.createReadStream(path.join(__dirname, 'nadac-data.csv'))
       .pipe(csv())
       .on('data', (row) => {
-        // Adjust column names based on CSV structure
         const drugName = row['NDC Description'] || row['NDC_Description'] || row['Drug Name'] || '';
         const ndc = row['NDC'] || row['ndc'] || '';
         const price = parseFloat(row['NADAC_Per_Unit'] || row['NADAC Per Unit'] || 0);
