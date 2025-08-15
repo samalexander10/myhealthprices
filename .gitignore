@@ -5,3 +5,5 @@ dist/bundle.js
 coverage
 node_modules/
 dist/
+medicaid-sdud-2024.csv
+*.csv
