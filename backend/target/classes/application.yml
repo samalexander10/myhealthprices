@@ -1,0 +1,21 @@
+server:
+  port: ${PORT:5000}
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.yoafnzw.mongodb.net/myhealthprices?retryWrites=true&w=majority}
+      
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.myhealthprices: INFO
+    org.springframework.data.mongodb: DEBUG

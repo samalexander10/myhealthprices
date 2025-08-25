@@ -1,0 +1,7 @@
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/controller/DrugController.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/MyHealthPricesApplication.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/config/WebConfig.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/util/DataImporter.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/service/DrugService.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/repository/DrugRepository.java
+/home/ubuntu/myhealthprices/backend/src/main/java/com/myhealthprices/model/Drug.java

@@ -4,8 +4,10 @@
   "description": "Web app for displaying health-related prices on myhealthprices.com",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "cd backend && mvn spring-boot:run",
+    "start:frontend": "webpack-dev-server --open",
     "build": "webpack --mode production",
+    "build:backend": "cd backend && mvn clean package",
     "dev": "webpack-dev-server --open",
     "lint": "eslint src/**",
     "lint:watch": "esw -w src/**",
@@ -13,11 +15,13 @@
     "test": "jest src/**",
     "test:watch": "jest src/** --watch",
     "test:watchAll": "jest src/** --watchAll",
-    "test:coverage:report": "open coverage/lcov-report/index.html"
+    "test:coverage:report": "open coverage/lcov-report/index.html",
+    "test:backend": "cd backend && mvn test"
   },
   "engines": {
     "node": "16.x"
   },
+  "proxy": "http://localhost:5000",
   "author": "samalexander10",
   "license": "ISC",
   "dependencies": {
