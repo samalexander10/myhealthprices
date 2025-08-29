@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "webpack --mode production",
+    "heroku-postbuild": "npm run build",
     "dev": "webpack-dev-server --open",
     "lint": "eslint src/**",
     "lint:watch": "esw -w src/**",
@@ -13,7 +14,10 @@
     "test": "jest src/**",
     "test:watch": "jest src/** --watch",
     "test:watchAll": "jest src/** --watchAll",
-    "test:coverage:report": "open coverage/lcov-report/index.html"
+    "test:coverage:report": "open coverage/lcov-report/index.html",
+    "test:e2e:heroku": "PLAYWRIGHT_BASE_URL=https://myhealthprices-app.herokuapp.com npx playwright test",
+    "test:e2e:prod": "PLAYWRIGHT_BASE_URL=https://myhealthprices.com npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed"
   },
   "engines": {
     "node": "16.x"
@@ -46,6 +50,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.27.1",
+    "@playwright/test": "^1.47.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.2",
     "@testing-library/react": "^16.0.1",
