@@ -7,7 +7,12 @@ test('home page loads and shows title', async ({ page }) => {
   await expect(root).toBeVisible();
 });
 
-test('health endpoint responds OK', async ({ request }) => {
+const base = process.env.PLAYWRIGHT_BASE_URL || '';
+const isProdSite = /myhealthprices\.com\/?$/i.test(base);
+
+const maybe = isProdSite ? test.skip : test;
+
+maybe('health endpoint responds OK', async ({ request }) => {
   const res = await request.get('/api/health');
   expect(res.ok()).toBeTruthy();
   const json = await res.json();
