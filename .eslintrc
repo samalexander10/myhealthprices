@@ -1,6 +1,6 @@
 {
   root: true,
-  parser: 'babel-eslint',
+  parser: '@babel/eslint-parser',
   plugins: [/*'import', */'jsx-a11y', 'react'],
 
   env: {
