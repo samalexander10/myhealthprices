@@ -1,6 +1,6 @@
 {
   root: true,
-  parser: 'babel-eslint',
+  parser: '@babel/eslint-parser',
   plugins: [/*'import', */'jsx-a11y', 'react'],
 
   env: {
@@ -12,8 +12,12 @@
   },
 
   parserOptions: {
-    ecmaVersion: 6,
+    ecmaVersion: 2018,
     sourceType: 'module',
+    requireConfigFile: false,
+    babelOptions: {
+      presets: ['@babel/preset-react']
+    },
     ecmaFeatures: {
       jsx: true,
       generators: true,

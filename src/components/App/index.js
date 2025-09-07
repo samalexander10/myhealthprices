@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import StateComparisonChart from '../StateComparisonChart';
 
 function App() {
   const [drugName, setDrugName] = useState('');
@@ -175,48 +176,99 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>MyHealthPrices</h1>
-      <div className="layout">
-        <div className="filter-panel">
-          <h3>Locations</h3>
-          <ul className="location-list">
-            {locations.map(location => (
-              <li
-                key={location}
-                className={`location-item ${selectedLocations.includes(location) ? 'active' : ''}`}
-                onClick={() => toggleLocation(location)}
-              >
-                {location}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="main-content">
-          <div className="search-bar">
-            <input
-              type="text"
-              value={drugName}
-              onChange={(e) => setDrugName(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter drug name (e.g., IBUPROFEN 200 MG CAPSULE)"
-            />
-            <button onClick={fetchDrugInfo}>Search</button>
-          </div>
-          {loading && <div className="spinner">Loading...</div>}
-          {error && <p className="error">{error}</p>}
-          {results.length > 0 && (
-            <div className="results">
-              {results.map((result, index) => (
-                <div key={index} className="result-card">
-                  <h2>{result.name}</h2>
-                  <p><strong>NDC:</strong> {result.ndc}</p>
-                  <p><strong>Price:</strong> ${result.price}</p>
-                  <p><strong>Location:</strong> {result.location}</p>
+    <div className="app">
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="container">
+          <div className="hero-content">
+            <div className="hero-text">
+              <h1 className="hero-title">
+                <i className="fas fa-heartbeat"></i>
+                MyHealthPrices
+              </h1>
+              <p className="hero-subtitle">
+                Compare prescription drug costs across all 50 states and make informed healthcare decisions.
+              </p>
+              <div className="hero-stats">
+                <div className="stat">
+                  <span className="stat-number">50</span>
+                  <span className="stat-label">States Covered</span>
                 </div>
-              ))}
+                <div className="stat">
+                  <span className="stat-number">Real-time</span>
+                  <span className="stat-label">Price Data</span>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <div className="container">
+        <div className="layout">
+          <div className="filter-panel">
+            <h3><i className="fas fa-map-marker-alt"></i> Select States</h3>
+            <ul className="location-list">
+              {locations.map(location => (
+                <li
+                  key={location}
+                  className={`location-item ${selectedLocations.includes(location) ? 'active' : ''}`}
+                  onClick={() => toggleLocation(location)}
+                >
+                  {location}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="main-content">
+            <div className="search-section">
+              <h2>Search Prescription Drugs</h2>
+              <div className="search-bar">
+                <input
+                  type="text"
+                  value={drugName}
+                  onChange={(e) => setDrugName(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter drug name (e.g., IBUPROFEN 200 MG CAPSULE)"
+                />
+                <button onClick={fetchDrugInfo}>
+                  <i className="fas fa-search"></i> Search
+                </button>
+              </div>
+            </div>
+            
+            {loading && (
+              <div className="spinner">
+                <i className="fas fa-spinner fa-spin"></i> Loading...
+              </div>
+            )}
+            
+            {error && <p className="error"><i className="fas fa-exclamation-triangle"></i> {error}</p>}
+            
+            {results.length > 0 && (
+              <>
+                <StateComparisonChart results={results} />
+                <div className="results-section">
+                  <h3>Detailed Results</h3>
+                  <div className="results">
+                    {results.map((result, index) => (
+                      <div key={index} className="result-card">
+                        <div className="card-header">
+                          <h4>{result.name}</h4>
+                          <span className="price-badge">${result.price}</span>
+                        </div>
+                        <div className="card-body">
+                          <p><i className="fas fa-barcode"></i> <strong>NDC:</strong> {result.ndc}</p>
+                          <p><i className="fas fa-map-marker-alt"></i> <strong>Location:</strong> {result.location}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
