@@ -5,6 +5,12 @@ test('home page loads and shows title', async ({ page }) => {
   await expect(page).toHaveTitle(/MyHealthPrices|React App|My Health Prices/i);
   const root = page.locator('#root');
   await expect(root).toBeVisible();
+  
+  const heroSection = page.locator('.hero-section');
+  await expect(heroSection).toBeVisible();
+  const heroTitle = page.locator('.hero-title');
+  await expect(heroTitle).toBeVisible();
+  await expect(heroTitle).toContainText('MyHealthPrices');
 });
 
 const base = process.env.PLAYWRIGHT_BASE_URL || '';
