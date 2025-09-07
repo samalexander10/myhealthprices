@@ -9,9 +9,19 @@ export default defineConfig({
     headless: true,
     viewport: { width: 1280, height: 800 },
     ignoreHTTPSErrors: true,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on'
   },
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]]
+  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
+  projects: [
+    {
+      name: 'regression-tests',
+      testMatch: '**/regression.spec.ts',
+      use: {
+        video: 'on',
+        trace: 'on'
+      }
+    }
+  ]
 });
