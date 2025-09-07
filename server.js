@@ -62,76 +62,33 @@ app.get('/api/medications/top-expensive', async (req, res) => {
       return res.status(400).json({ error: 'Limit must be between 1 and 10' });
     }
 
-    const mockTopMedications = [
-      {
-        id: 'med_001',
-        name: 'Humira (adalimumab)',
-        generic_name: 'adalimumab',
-        price: 6240.00,
-        pharmacy_id: 'pharm_001',
-        pharmacy: 'CVS Pharmacy',
-        city: 'New York',
-        state: 'NY',
-        zip: '10001',
-        last_updated: new Date('2024-01-15T10:30:00Z')
-      },
-      {
-        id: 'med_002',
-        name: 'Enbrel (etanercept)',
-        generic_name: 'etanercept',
-        price: 5800.50,
-        pharmacy_id: 'pharm_002',
-        pharmacy: 'Walgreens',
-        city: 'Los Angeles',
-        state: 'CA',
-        zip: '90210',
-        last_updated: new Date('2024-01-15T09:15:00Z')
-      },
-      {
-        id: 'med_003',
-        name: 'Remicade (infliximab)',
-        generic_name: 'infliximab',
-        price: 5200.25,
-        pharmacy_id: 'pharm_003',
-        pharmacy: 'Rite Aid',
-        city: 'Chicago',
-        state: 'IL',
-        zip: '60601',
-        last_updated: new Date('2024-01-14T16:45:00Z')
-      },
-      {
-        id: 'med_004',
-        name: 'Stelara (ustekinumab)',
-        generic_name: 'ustekinumab',
-        price: 4800.75,
-        pharmacy_id: 'pharm_004',
-        pharmacy: 'CVS Pharmacy',
-        city: 'Houston',
-        state: 'TX',
-        zip: '77001',
-        last_updated: new Date('2024-01-13T14:20:00Z')
-      },
-      {
-        id: 'med_005',
-        name: 'Cosentyx (secukinumab)',
-        generic_name: 'secukinumab',
-        price: 4500.00,
-        pharmacy_id: 'pharm_005',
-        pharmacy: 'Walgreens',
-        city: 'Phoenix',
-        state: 'AZ',
-        zip: '85001',
-        last_updated: new Date('2024-01-12T11:30:00Z')
-      }
-    ];
+    // Query the database for top expensive medications
+    const topMeds = await Drug.find({
+      nadac_price: { $gt: 0 } // Only include drugs with valid prices
+    })
+    .sort({ nadac_price: -1 }) // Sort by price descending
+    .limit(limit)
+    .select('drug_name generic_name nadac_price pharmacy pharmacy_id city state zip last_updated')
+    .lean(); // Use lean() for better performance
 
-    const topMeds = mockTopMedications.slice(0, limit);
-    
     if (!topMeds || topMeds.length === 0) {
       return res.status(404).json({ error: 'No medications found' });
     }
 
-    res.json(topMeds);
+    const formattedMeds = topMeds.map((med, index) => ({
+      id: med._id.toString(),
+      name: med.drug_name,
+      generic_name: med.generic_name || '',
+      price: med.nadac_price,
+      pharmacy_id: med.pharmacy_id || `pharm_${index + 1}`,
+      pharmacy: med.pharmacy || 'Unknown Pharmacy',
+      city: med.city || 'Unknown City',
+      state: med.state || 'Unknown State',
+      zip: med.zip || '',
+      last_updated: med.last_updated || new Date()
+    }));
+
+    res.json(formattedMeds);
   } catch (error) {
     console.error('Error fetching top expensive medications:', error);
     res.status(500).json({ error: 'Internal server error' });
