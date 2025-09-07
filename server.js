@@ -45,6 +45,43 @@ app.get('/api/drugs', async (req, res) => {
   }
 });
 
+// API endpoint to get top expensive medications
+app.get('/api/medications/top-expensive', async (req, res) => {
+  const { limit = 3 } = req.query;
+  try {
+    const mockTopMeds = [
+      {
+        id: 'med_001',
+        name: 'HUMIRA 40 MG/0.8 ML PREFILLED PEN',
+        price: 7456.02,
+        pharmacy: 'CVS Pharmacy',
+        city: 'New York',
+        state: 'NY'
+      },
+      {
+        id: 'med_002', 
+        name: 'ENBREL 50 MG/ML PREFILLED SYRINGE',
+        price: 6891.45,
+        pharmacy: 'Walgreens',
+        city: 'Los Angeles',
+        state: 'CA'
+      },
+      {
+        id: 'med_003',
+        name: 'REMICADE 100 MG VIAL',
+        price: 5234.78,
+        pharmacy: 'Rite Aid',
+        city: 'Chicago',
+        state: 'IL'
+      }
+    ];
+    
+    res.json(mockTopMeds.slice(0, parseInt(limit)));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK' });

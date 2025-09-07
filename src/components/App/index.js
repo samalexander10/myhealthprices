@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TopExpensiveMeds from '../TopExpensiveMeds';
 
 function App() {
   const [drugName, setDrugName] = useState('');
@@ -177,6 +178,7 @@ function App() {
   return (
     <div className="container">
       <h1>MyHealthPrices</h1>
+      <TopExpensiveMeds />
       <div className="layout">
         <div className="filter-panel">
           <h3>Locations</h3>
