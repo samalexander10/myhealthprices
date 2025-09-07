@@ -18,6 +18,8 @@ const drugSchema = new mongoose.Schema({
   drug_name: String,
   ndc: String,
   nadac_price: Number,
+  price: Number,
+  source: String,
   generic_name: String,
   pharmacy_id: String,
   pharmacy: String,
@@ -56,32 +58,41 @@ app.get('/api/drugs', async (req, res) => {
 // API endpoint for top expensive medications
 app.get('/api/medications/top-expensive', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 3;
-    
-    if (limit < 1 || limit > 10) {
-      return res.status(400).json({ error: 'Limit must be between 1 and 10' });
-    }
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 3, 1), 10);
 
-    // Query the SDUD database for top expensive medications by state
-    const topMeds = await Drug.find({
-      source: 'SDUD',
-      price: { $gt: 0 },
-      state: { $exists: true, $ne: '' }
-    })
-    .sort({ price: -1 }) // Sort by price descending
-    .limit(limit)
-    .select('drug_name price state')
-    .lean(); // Use lean() for better performance
+    const pipeline = [
+      {
+        $match: {
+          source: 'SDUD',
+          price: { $gt: 0 },
+          state: { $exists: true, $ne: '' }
+        }
+      },
+      { $sort: { price: -1 } },
+      { $limit: limit },
+      {
+        $project: {
+          id: '$_id',
+          name: '$drug_name',
+          price: 1,
+          state: 1,
+          last_updated: 1
+        }
+      }
+    ];
 
-    if (!topMeds || topMeds.length === 0) {
+    const results = await Drug.aggregate(pipeline).exec();
+
+    if (!results || results.length === 0) {
       return res.status(404).json({ error: 'No medications found' });
     }
 
-    const formattedMeds = topMeds.map((med) => ({
-      id: med._id.toString(),
-      name: med.drug_name,
+    const formattedMeds = results.map((med) => ({
+      id: med.id.toString(),
+      name: med.name,
       price: med.price,
-      state: med.state
+      state: med.state,
+      ...(med.last_updated ? { last_updated: med.last_updated } : {})
     }));
 
     res.json(formattedMeds);
