@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StateComparisonChart from '../StateComparisonChart';
+import TopExpensiveMeds from '../TopExpensiveMeds';
 
 function App() {
   const [drugName, setDrugName] = useState('');
@@ -206,6 +207,9 @@ function App() {
 
       {/* Main Content */}
       <div className="container">
+        {/* Top Expensive Medications - positioned near top */}
+        <TopExpensiveMeds />
+        
         <div className="layout">
           <div className="filter-panel">
             <h3><i className="fas fa-map-marker-alt"></i> Select States</h3>
