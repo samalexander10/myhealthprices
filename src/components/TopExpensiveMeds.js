@@ -42,6 +42,25 @@ const TopExpensiveMeds = () => {
     return colors[index] || 'rank-default';
   };
 
+  const getStateName = (stateCode) => {
+    const stateMap = {
+      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+      'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+      'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+      'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+      'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+      'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+      'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+      'WI': 'Wisconsin', 'WY': 'Wyoming'
+    };
+    return stateMap[stateCode] || stateCode;
+  };
+
   if (loading) {
     return (
       <div className="top-expensive-meds-container" data-testid="top-expensive-meds-loading">
@@ -87,7 +106,7 @@ const TopExpensiveMeds = () => {
             </h2>
           </div>
           <p className="section-subtitle">
-            Current highest-cost medications across all tracked locations
+            Current highest-cost medications by state pricing
           </p>
         </div>
         <div className="card-body">
@@ -118,6 +137,7 @@ const TopExpensiveMeds = () => {
                     >
                       {formatPrice(med.price)}
                     </span>
+                    <span className="price-unit">per unit</span>
                   </div>
                   
                   <div className="location-section">
@@ -126,9 +146,7 @@ const TopExpensiveMeds = () => {
                       className="location-info"
                       data-testid={`med-location-${index}`}
                     >
-                      <div className="pharmacy-name">{med.pharmacy}</div>
-                      <div className="location-details">{med.city}, {med.state}</div>
-                      {med.zip && <div className="zip-code">{med.zip}</div>}
+                      <div className="state-name">{getStateName(med.state)}</div>
                     </div>
                   </div>
 
@@ -143,7 +161,7 @@ const TopExpensiveMeds = () => {
           </div>
           
           <div className="disclaimer">
-            Prices shown are retail prices and may vary. Consult with pharmacies for current pricing.
+            Prices shown are average unit prices by state and may vary by location and pharmacy.
           </div>
         </div>
       </div>

@@ -62,30 +62,26 @@ app.get('/api/medications/top-expensive', async (req, res) => {
       return res.status(400).json({ error: 'Limit must be between 1 and 10' });
     }
 
-    // Query the database for top expensive medications
+    // Query the SDUD database for top expensive medications by state
     const topMeds = await Drug.find({
-      nadac_price: { $gt: 0 } // Only include drugs with valid prices
+      source: 'SDUD',
+      price: { $gt: 0 },
+      state: { $exists: true, $ne: '' }
     })
-    .sort({ nadac_price: -1 }) // Sort by price descending
+    .sort({ price: -1 }) // Sort by price descending
     .limit(limit)
-    .select('drug_name generic_name nadac_price pharmacy pharmacy_id city state zip last_updated')
+    .select('drug_name price state')
     .lean(); // Use lean() for better performance
 
     if (!topMeds || topMeds.length === 0) {
       return res.status(404).json({ error: 'No medications found' });
     }
 
-    const formattedMeds = topMeds.map((med, index) => ({
+    const formattedMeds = topMeds.map((med) => ({
       id: med._id.toString(),
       name: med.drug_name,
-      generic_name: med.generic_name || '',
-      price: med.nadac_price,
-      pharmacy_id: med.pharmacy_id || `pharm_${index + 1}`,
-      pharmacy: med.pharmacy || 'Unknown Pharmacy',
-      city: med.city || 'Unknown City',
-      state: med.state || 'Unknown State',
-      zip: med.zip || '',
-      last_updated: med.last_updated || new Date()
+      price: med.price,
+      state: med.state
     }));
 
     res.json(formattedMeds);
