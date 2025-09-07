@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 // Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://samalexander10:masr0eCwFibJPTbF@cluster0.mongodb.net/myhealthprices?retryWrites=true&w=majority', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://samalexander10:9ujUtpLg4KjQ8dyU@cluster0.mongodb.net/myhealthprices?retryWrites=true&w=majority', {
   serverSelectionTimeoutMS: 30000,
 }).then(() => {
   console.log('Connected to MongoDB Atlas');
