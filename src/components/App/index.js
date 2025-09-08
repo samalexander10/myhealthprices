@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StateComparisonChart from '../StateComparisonChart';
 import TopExpensiveMeds from '../TopExpensiveMeds';
+import LowestPriceMeds from '../LowestPriceMeds';
 
 function App() {
   const [drugName, setDrugName] = useState('');
@@ -209,6 +210,9 @@ function App() {
       <div className="container">
         {/* Top Expensive Medications - positioned near top */}
         <TopExpensiveMeds />
+        
+        {/* Lowest Price Medications */}
+        <LowestPriceMeds />
         
         <div className="layout">
           <div className="filter-panel">
