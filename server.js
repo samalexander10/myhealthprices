@@ -95,7 +95,7 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     ];
 
     console.log('Executing aggregation pipeline for top expensive medications...');
-    const results = await Drug.aggregate(pipeline).maxTimeMS(30000).exec();
+    const results = await Drug.aggregate(pipeline, { maxTimeMS: 30000 }).exec();
 
     console.log(`Found ${results.length} top expensive medications`);
 
