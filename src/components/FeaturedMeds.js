@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
-const LowestPriceMeds = () => {
-  const [lowestMeds, setLowestMeds] = useState([]);
+const FeaturedMeds = () => {
+  const [featuredMeds, setFeaturedMeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchLowestPriceMeds();
+    fetchFeaturedMeds();
   }, []);
 
-  const fetchLowestPriceMeds = async () => {
+  const fetchFeaturedMeds = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/medications/lowest-price?limit=3');
+      const response = await fetch('/api/medications/featured?limit=3');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No medication data available');
+        throw new Error('No featured medication data available');
       }
-      setLowestMeds(data);
+      setFeaturedMeds(data);
     } catch (err) {
-      console.error('Error fetching lowest price medications:', err);
+      console.error('Error fetching featured medications:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -44,8 +44,8 @@ const LowestPriceMeds = () => {
 
   if (loading) {
     return (
-      <div className="lowest-price-meds-container" data-testid="lowest-price-meds-loading">
-        <div className="lowest-price-meds-card">
+      <div className="featured-meds-container" data-testid="featured-meds-loading">
+        <div className="featured-meds-card">
           <div className="card-header">
             <div className="skeleton skeleton-title"></div>
           </div>
@@ -66,35 +66,35 @@ const LowestPriceMeds = () => {
 
   if (error) {
     return (
-      <div className="lowest-price-meds-container" data-testid="lowest-price-meds-error">
+      <div className="featured-meds-container" data-testid="featured-meds-error">
         <div className="error-alert">
           <i className="fas fa-exclamation-triangle"></i>
-          Unable to load lowest price medications: {error}
+          Unable to load featured medications: {error}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="lowest-price-meds-container" data-testid="lowest-price-meds">
-      <div className="lowest-price-meds-card">
+    <div className="featured-meds-container" data-testid="featured-meds">
+      <div className="featured-meds-card">
         <div className="card-header">
           <div className="header-content">
-            <i className="fas fa-chart-line header-icon"></i>
+            <i className="fas fa-star header-icon"></i>
             <h2 className="section-title">
-              Top 3 Lowest-Priced Medications
+              Featured Medications
             </h2>
           </div>
           <p className="section-subtitle">
-            Most affordable medications by price per unit (minimum $1.00)
+            Curated selection of mid-range priced medications
           </p>
         </div>
         <div className="card-body">
           <div className="meds-grid">
-            {lowestMeds.map((med, index) => (
+            {featuredMeds.map((med, index) => (
               <div
                 key={`${med.name}-${med.ndc}`}
-                className="med-card lowest-price"
+                className="med-card featured"
                 data-testid={`med-card-${index}`}
               >
                 <div className={`rank-badge ${getRankColor(index)}`} data-testid={`rank-badge-${index}`}>
@@ -137,7 +137,7 @@ const LowestPriceMeds = () => {
           </div>
           
           <div className="disclaimer">
-            Prices shown are lowest available unit prices (minimum $1.00) and may vary by location and pharmacy.
+            Featured medications are updated daily and represent mid-range pricing options.
           </div>
         </div>
       </div>
@@ -145,4 +145,4 @@ const LowestPriceMeds = () => {
   );
 };
 
-export default LowestPriceMeds;
+export default FeaturedMeds;
