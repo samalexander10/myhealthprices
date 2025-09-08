@@ -1,10 +1,12 @@
 /* Top Expensive Medications Component Styles */
 
-.top-expensive-meds-container {
+.top-expensive-meds-container,
+.lowest-price-meds-container {
   margin-bottom: 30px;
 }
 
-.top-expensive-meds-card {
+.top-expensive-meds-card,
+.lowest-price-meds-card {
   background: white;
   border-radius: var(--border-radius);
   box-shadow: var(--card-shadow);
@@ -67,6 +69,11 @@
   border-radius: var(--border-radius);
   padding: 20px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 4px solid #dc3545;
+}
+
+.med-card.lowest-price {
+  border-left: 4px solid var(--success-green);
 }
 
 .med-card:hover {
@@ -140,6 +147,13 @@
   color: #666;
   margin-left: 8px;
   font-weight: normal;
+}
+
+.generic-name {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
 .location-section {

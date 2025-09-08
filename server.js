@@ -64,70 +64,116 @@ app.get('/api/medications/top-expensive', async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 3, 1), 10);
 
-    const pipeline = [
+    const aggregationPipeline = [
+      {
+        $addFields: {
+          pricePerUnit: {
+            $cond: {
+              if: { $and: [{ $ifNull: ["$price", false] }, { $gt: ["$price", 0] }] },
+              then: "$price",
+              else: {
+                $cond: {
+                  if: { $and: [{ $ifNull: ["$nadac_price", false] }, { $gt: ["$nadac_price", 0] }] },
+                  then: "$nadac_price",
+                  else: 0
+                }
+              }
+            }
+          }
+        }
+      },
       {
         $match: {
-          nadac_price: { $exists: true, $gt: 100 }
+          pricePerUnit: { $gt: 0 }
         }
       },
-      { $limit: 500 },
       {
-        $sort: { nadac_price: -1 }
-      },
-      {
-        $group: {
-          _id: '$drug_name',
-          doc: { $first: '$$ROOT' }
+        $sort: { 
+          pricePerUnit: -1,
+          drug_name: 1
         }
       },
-      { $replaceRoot: { newRoot: '$doc' } },
-      { $limit: limit },
+      {
+        $limit: limit
+      },
       {
         $project: {
-          id: '$_id',
-          name: '$drug_name',
-          price: '$nadac_price',
-          ndc: 1,
-          state: 1,
-          last_updated: 1
+          name: "$drug_name",
+          genericName: "$generic_name",
+          pricePerUnit: 1,
+          ndc: 1
         }
       }
     ];
 
     console.log('Executing aggregation pipeline for top expensive medications...');
-    const results = await Drug.aggregate(pipeline, { maxTimeMS: 30000 }).exec();
+    const topMedications = await Drug.aggregate(aggregationPipeline, { maxTimeMS: 30000 }).exec();
 
-    console.log(`Found ${results.length} top expensive medications`);
+    console.log(`Found ${topMedications.length} top expensive medications by price per unit`);
+    res.json(topMedications);
 
-    if (results.length === 0) {
-      const totalDocs = await Drug.countDocuments();
-      const withAnyPrice = await Drug.countDocuments({
-        $or: [
-          { nadac_price: { $exists: true, $ne: null } },
-          { price: { $exists: true, $ne: null } }
-        ]
-      });
-      
-      console.log(`Debug - Total docs: ${totalDocs}, Docs with price fields: ${withAnyPrice}`);
-      console.warn('No medications found with valid price data');
-    }
-
-    if (!results || results.length === 0) {
-      return res.json([]);
-    }
-
-    const formattedMeds = results.map((med) => ({
-      id: med.id.toString(),
-      name: med.name,
-      price: med.price,
-      state: med.state,
-      ...(med.last_updated ? { last_updated: med.last_updated } : {})
-    }));
-
-    res.json(formattedMeds);
   } catch (error) {
-    console.error('Error fetching top expensive medications:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in top-expensive endpoint:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint for lowest price medications  
+app.get('/api/medications/lowest-price', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 3, 1), 10);
+
+    const aggregationPipeline = [
+      {
+        $addFields: {
+          pricePerUnit: {
+            $cond: {
+              if: { $and: [{ $ifNull: ["$price", false] }, { $gt: ["$price", 0] }] },
+              then: "$price",
+              else: {
+                $cond: {
+                  if: { $and: [{ $ifNull: ["$nadac_price", false] }, { $gt: ["$nadac_price", 0] }] },
+                  then: "$nadac_price",
+                  else: 0
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          pricePerUnit: { $gt: 0 }
+        }
+      },
+      {
+        $sort: { 
+          pricePerUnit: 1,
+          drug_name: 1
+        }
+      },
+      {
+        $limit: limit
+      },
+      {
+        $project: {
+          name: "$drug_name",
+          genericName: "$generic_name",
+          pricePerUnit: 1,
+          ndc: 1
+        }
+      }
+    ];
+
+    console.log('Executing aggregation pipeline for lowest price medications...');
+    const lowestPriceMedications = await Drug.aggregate(aggregationPipeline, { maxTimeMS: 30000 }).exec();
+
+    console.log(`Found ${lowestPriceMedications.length} lowest price medications by price per unit`);
+    res.json(lowestPriceMedications);
+
+  } catch (error) {
+    console.error('Error in lowest-price endpoint:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

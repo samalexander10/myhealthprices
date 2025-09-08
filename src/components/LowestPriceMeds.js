@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-const TopExpensiveMeds = () => {
-  const [topMeds, setTopMeds] = useState([]);
+const LowestPriceMeds = () => {
+  const [lowestMeds, setLowestMeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchTopExpensiveMeds();
+    fetchLowestPriceMeds();
   }, []);
 
-  const fetchTopExpensiveMeds = async () => {
+  const fetchLowestPriceMeds = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/medications/top-expensive?limit=3');
+      const response = await fetch('/api/medications/lowest-price?limit=3');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -21,9 +21,9 @@ const TopExpensiveMeds = () => {
       if (!Array.isArray(data) || data.length === 0) {
         throw new Error('No medication data available');
       }
-      setTopMeds(data);
+      setLowestMeds(data);
     } catch (err) {
-      console.error('Error fetching top expensive medications:', err);
+      console.error('Error fetching lowest price medications:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -42,29 +42,10 @@ const TopExpensiveMeds = () => {
     return colors[index] || 'rank-default';
   };
 
-  const getStateName = (stateCode) => {
-    const stateMap = {
-      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
-      'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
-      'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-      'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
-      'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-      'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
-      'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
-      'WI': 'Wisconsin', 'WY': 'Wyoming'
-    };
-    return stateMap[stateCode] || stateCode;
-  };
-
   if (loading) {
     return (
-      <div className="top-expensive-meds-container" data-testid="top-expensive-meds-loading">
-        <div className="top-expensive-meds-card">
+      <div className="lowest-price-meds-container" data-testid="lowest-price-meds-loading">
+        <div className="lowest-price-meds-card">
           <div className="card-header">
             <div className="skeleton skeleton-title"></div>
           </div>
@@ -74,7 +55,6 @@ const TopExpensiveMeds = () => {
                 <div key={i} className="med-card-skeleton">
                   <div className="skeleton skeleton-text"></div>
                   <div className="skeleton skeleton-price"></div>
-                  <div className="skeleton skeleton-location"></div>
                 </div>
               ))}
             </div>
@@ -86,35 +66,35 @@ const TopExpensiveMeds = () => {
 
   if (error) {
     return (
-      <div className="top-expensive-meds-container" data-testid="top-expensive-meds-error">
+      <div className="lowest-price-meds-container" data-testid="lowest-price-meds-error">
         <div className="error-alert">
           <i className="fas fa-exclamation-triangle"></i>
-          Unable to load top medications: {error}
+          Unable to load lowest price medications: {error}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="top-expensive-meds-container" data-testid="top-expensive-meds">
-      <div className="top-expensive-meds-card">
+    <div className="lowest-price-meds-container" data-testid="lowest-price-meds">
+      <div className="lowest-price-meds-card">
         <div className="card-header">
           <div className="header-content">
             <i className="fas fa-chart-line header-icon"></i>
             <h2 className="section-title">
-              Top 3 Highest-Priced Medications
+              Top 3 Lowest-Priced Medications
             </h2>
           </div>
           <p className="section-subtitle">
-            Current highest-cost medications by price per unit
+            Most affordable medications by price per unit
           </p>
         </div>
         <div className="card-body">
           <div className="meds-grid">
-            {topMeds.map((med, index) => (
+            {lowestMeds.map((med, index) => (
               <div
-                key={`${med.id}-${med.pharmacy_id}`}
-                className="med-card"
+                key={`${med.name}-${med.ndc}`}
+                className="med-card lowest-price"
                 data-testid={`med-card-${index}`}
               >
                 <div className={`rank-badge ${getRankColor(index)}`} data-testid={`rank-badge-${index}`}>
@@ -135,14 +115,14 @@ const TopExpensiveMeds = () => {
                       className="med-price"
                       data-testid={`med-price-${index}`}
                     >
-                      {formatPrice(med.pricePerUnit || med.price)}
+                      {formatPrice(med.pricePerUnit)}
                     </span>
                     <span className="price-unit">per unit</span>
                   </div>
 
-                  {med.last_updated && (
-                    <div className="last-updated">
-                      Updated: {new Date(med.last_updated).toLocaleDateString()}
+                  {med.genericName && med.name !== med.genericName && (
+                    <div className="generic-name">
+                      Generic: {med.genericName}
                     </div>
                   )}
                 </div>
@@ -151,7 +131,7 @@ const TopExpensiveMeds = () => {
           </div>
           
           <div className="disclaimer">
-            Prices shown are unit prices and may vary by location and pharmacy.
+            Prices shown are lowest available unit prices and may vary by location and pharmacy.
           </div>
         </div>
       </div>
@@ -159,4 +139,4 @@ const TopExpensiveMeds = () => {
   );
 };
 
-export default TopExpensiveMeds;
+export default LowestPriceMeds;
