@@ -84,7 +84,7 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const results = await Drug.aggregate(pipeline).exec();
 
     if (!results || results.length === 0) {
-      return res.status(404).json({ error: 'No medications found' });
+      return res.json([]);
     }
 
     const formattedMeds = results.map((med) => ({
