@@ -67,7 +67,7 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const pipeline = [
       {
         $match: {
-          nadac_price: { $gt: 0 },
+          nadac_price: { $exists: true, $gt: 0 },
           is_active: true
         }
       },
