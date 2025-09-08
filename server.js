@@ -67,11 +67,13 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const pipeline = [
       {
         $match: {
-          nadac_price: { $exists: true, $gt: 0 },
-          is_active: true
+          nadac_price: { $exists: true, $gt: 10 }
         }
       },
-      { $sort: { nadac_price: -1 } },
+      {
+        $sort: { nadac_price: -1 }
+      },
+      { $limit: 1000 },
       {
         $group: {
           _id: '$drug_name',
@@ -86,12 +88,29 @@ app.get('/api/medications/top-expensive', async (req, res) => {
           name: '$drug_name',
           price: '$nadac_price',
           ndc: 1,
+          state: 1,
           last_updated: 1
         }
       }
     ];
 
+    console.log('Executing aggregation pipeline for top expensive medications...');
     const results = await Drug.aggregate(pipeline).exec();
+
+    console.log(`Found ${results.length} top expensive medications`);
+
+    if (results.length === 0) {
+      const totalDocs = await Drug.countDocuments();
+      const withAnyPrice = await Drug.countDocuments({
+        $or: [
+          { nadac_price: { $exists: true, $ne: null } },
+          { price: { $exists: true, $ne: null } }
+        ]
+      });
+      
+      console.log(`Debug - Total docs: ${totalDocs}, Docs with price fields: ${withAnyPrice}`);
+      console.warn('No medications found with valid price data');
+    }
 
     if (!results || results.length === 0) {
       return res.json([]);
