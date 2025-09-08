@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StateComparisonChart from '../StateComparisonChart';
 import TopExpensiveMeds from '../TopExpensiveMeds';
+import FeaturedMeds from '../FeaturedMeds';
 import LowestPriceMeds from '../LowestPriceMeds';
 
 function App() {
@@ -210,6 +211,9 @@ function App() {
       <div className="container">
         {/* Top Expensive Medications - positioned near top */}
         <TopExpensiveMeds />
+        
+        {/* Featured Medications */}
+        <FeaturedMeds />
         
         {/* Lowest Price Medications */}
         <LowestPriceMeds />

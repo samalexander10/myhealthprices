@@ -140,6 +140,18 @@ const TopExpensiveMeds = () => {
                     <span className="price-unit">per unit</span>
                   </div>
 
+                  {med.genericName && med.name !== med.genericName && (
+                    <div className="generic-name">
+                      Generic: {med.genericName}
+                    </div>
+                  )}
+
+                  {med.ndcPrefix && (
+                    <div className="ndc-info">
+                      NDC: {med.ndcPrefix}xxxxx
+                    </div>
+                  )}
+
                   {med.last_updated && (
                     <div className="last-updated">
                       Updated: {new Date(med.last_updated).toLocaleDateString()}
