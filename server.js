@@ -67,13 +67,13 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const pipeline = [
       {
         $match: {
-          nadac_price: { $exists: true, $gt: 10 }
+          nadac_price: { $exists: true, $gt: 100 }
         }
       },
+      { $limit: 500 },
       {
         $sort: { nadac_price: -1 }
       },
-      { $limit: 1000 },
       {
         $group: {
           _id: '$drug_name',
@@ -95,7 +95,7 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     ];
 
     console.log('Executing aggregation pipeline for top expensive medications...');
-    const results = await Drug.aggregate(pipeline).exec();
+    const results = await Drug.aggregate(pipeline).maxTimeMS(30000).exec();
 
     console.log(`Found ${results.length} top expensive medications`);
 
