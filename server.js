@@ -63,19 +63,18 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const pipeline = [
       {
         $match: {
-          source: 'SDUD',
-          price: { $gt: 0 },
-          state: { $exists: true, $ne: '' }
+          nadac_price: { $gt: 0 },
+          is_active: true
         }
       },
-      { $sort: { price: -1 } },
+      { $sort: { nadac_price: -1 } },
       { $limit: limit },
       {
         $project: {
           id: '$_id',
           name: '$drug_name',
-          price: 1,
-          state: 1,
+          price: '$nadac_price',
+          ndc: 1,
           last_updated: 1
         }
       }
