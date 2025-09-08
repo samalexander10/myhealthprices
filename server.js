@@ -5,7 +5,11 @@ const mongoose = require('mongoose');
 const app = express();
 
 // Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://samalexander10:PUTziw3bEJxBdnKW@myhealthprices.yoafnzw.mongodb.net/?retryWrites=true&w=majority&appName=myhealthprices', {
+if (!process.env.MONGODB_URI) {
+  console.error('Missing MONGODB_URI environment variable');
+  process.exit(1);
+}
+mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 30000,
 }).then(() => {
   console.log('Connected to MongoDB Atlas');
@@ -69,6 +73,13 @@ app.get('/api/medications/top-expensive', async (req, res) => {
         }
       },
       { $sort: { price: -1 } },
+      {
+        $group: {
+          _id: '$drug_name',
+          doc: { $first: '$$ROOT' }
+        }
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
       { $limit: limit },
       {
         $project: {
@@ -84,7 +95,7 @@ app.get('/api/medications/top-expensive', async (req, res) => {
     const results = await Drug.aggregate(pipeline).exec();
 
     if (!results || results.length === 0) {
-      return res.status(404).json({ error: 'No medications found' });
+      return res.json([]);
     }
 
     const formattedMeds = results.map((med) => ({
