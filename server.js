@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const cron = require('node-cron');
+const { MedicaidDrugUtilization, DrugProduct, StateSummary, Drug } = require('./models');
 const app = express();
 
 // Connect to MongoDB Atlas
@@ -10,31 +11,27 @@ if (!process.env.MONGODB_URI) {
   console.error('Missing MONGODB_URI environment variable');
   process.exit(1);
 }
+async function initializeIndexes() {
+  try {
+    await MedicaidDrugUtilization.createIndexes();
+    await DrugProduct.createIndexes();
+    await StateSummary.createIndexes();
+    await Drug.createIndexes();
+    console.log('All database indexes created successfully');
+  } catch (error) {
+    console.error('Error creating indexes:', error);
+  }
+}
+
 mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 30000,
-}).then(() => {
+}).then(async () => {
   console.log('Connected to MongoDB Atlas');
+  console.log('Skipping index creation due to storage constraints');
 }).catch(err => {
   console.error('MongoDB connection error:', err);
 });
 
-// Define Drug schema
-const drugSchema = new mongoose.Schema({
-  drug_name: String,
-  ndc: String,
-  nadac_price: Number,
-  price: Number,
-  source: String,
-  generic_name: String,
-  pharmacy_id: String,
-  pharmacy: String,
-  city: String,
-  state: String,
-  zip: String,
-  last_updated: Date,
-  is_active: { type: Boolean, default: true }
-});
-const Drug = mongoose.model('Drug', drugSchema);
 
 async function initializeCachedCollections() {
   const db = mongoose.connection.db;
@@ -333,6 +330,90 @@ app.post('/api/medications/refresh-cache', async (req, res) => {
   }
 });
 
+// API endpoint for medicaid drug utilization search
+app.get('/api/medicaid/drugs', async (req, res) => {
+  try {
+    const { name, state, year, quarter } = req.query;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Drug name is required' });
+    }
+
+    let query = {
+      productName: { $regex: name, $options: 'i' },
+      suppressionUsed: false
+    };
+    
+    if (state) {
+      query.state = state;
+    }
+    
+    if (year) {
+      query.year = parseInt(year);
+    }
+    
+    if (quarter) {
+      query.quarter = parseInt(quarter);
+    }
+
+    const drugs = await MedicaidDrugUtilization.find(query)
+      .sort({ totalAmountReimbursed: -1 })
+      .limit(100);
+
+    res.json(drugs);
+  } catch (error) {
+    console.error('Error searching medicaid drugs:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API endpoint for drug product summaries
+app.get('/api/drug-products', async (req, res) => {
+  try {
+    const { name, limit = 50 } = req.query;
+    
+    let query = {};
+    if (name) {
+      query.productName = { $regex: name, $options: 'i' };
+    }
+
+    const products = await DrugProduct.find(query)
+      .sort({ totalReimbursed: -1 })
+      .limit(parseInt(limit));
+
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching drug products:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API endpoint for state summaries
+app.get('/api/state-summaries', async (req, res) => {
+  try {
+    const { state, year, quarter } = req.query;
+    
+    let query = {};
+    if (state) {
+      query.state = state;
+    }
+    if (year) {
+      query.year = parseInt(year);
+    }
+    if (quarter) {
+      query.quarter = parseInt(quarter);
+    }
+
+    const summaries = await StateSummary.find(query)
+      .sort({ totalReimbursed: -1 });
+
+    res.json(summaries);
+  } catch (error) {
+    console.error('Error fetching state summaries:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK' });
@@ -344,8 +425,7 @@ app.get('*', (req, res) => {
 });
 
 mongoose.connection.once('open', async () => {
-  await initializeCachedCollections();
-  await initializeDrugCache();
+  console.log('Skipping cached collections initialization due to storage constraints');
   
   cron.schedule('0 2 * * *', async () => {
     console.log('Running daily drug cache update...');
