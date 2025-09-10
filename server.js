@@ -3,7 +3,11 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const cron = require('node-cron');
+const session = require('express-session');
 const { MedicaidDrugUtilization, DrugProduct, StateSummary, Drug } = require('./models');
+const { initializeAuth, passport } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const app = express();
 
 // Connect to MongoDB Atlas
@@ -216,6 +220,24 @@ async function initializeDrugCache() {
 // Middleware
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+initializeAuth();
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
 
 // API endpoint to search drugs
 app.get('/api/drugs', async (req, res) => {
