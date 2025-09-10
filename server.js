@@ -133,6 +133,13 @@ async function logAdminAction(req, action, details) {
     });
   } catch (e) {}
 }
+function ensureDb(req, res, next) {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'DB not connected' });
+  }
+  next();
+}
+
 const admin = express.Router();
 admin.use(requireAdmin);
 
