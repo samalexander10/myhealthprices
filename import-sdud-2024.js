@@ -2,10 +2,16 @@ const mongoose = require('mongoose');
 const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
+const { MedicaidDrugUtilization, DrugProduct, StateSummary, Drug } = require('./models');
 
-// Connect to MongoDB Atlas
-mongoose.connect('mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.yoafnzw.mongodb.net/myhealthprices?retryWrites=true&w=majority', 
-{
+require('dotenv').config();
+
+if (!process.env.MONGODB_URI) {
+  console.error('Missing MONGODB_URI environment variable');
+  process.exit(1);
+}
+
+mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 30000,
 }).then(() => {
   console.log('Connected to MongoDB Atlas');
@@ -14,86 +20,118 @@ mongoose.connect('mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.y
   process.exit(1);
 });
 
-// Define Drug schema with state
-const drugSchema = new mongoose.Schema({
-  drug_name: String,
-  ndc: String,
-  price: Number,
-  state: String,
-  source: String,
-});
-const Drug = mongoose.model('Drug', drugSchema);
 
-// Read and import SDUD CSV in batches
-const importData = async () => {
+const importMedicaidData = async () => {
   try {
-    // Clear existing SDUD data
-    console.log('Clearing existing SDUD drug data...');
-    await Drug.deleteMany({ source: 'SDUD' }).catch(err => {
-      console.error('Error clearing SDUD drugs:', err);
+    console.log('Clearing existing medicaid drug utilization data...');
+    await MedicaidDrugUtilization.deleteMany({}).catch(err => {
+      console.error('Error clearing medicaid data:', err);
       throw err;
     });
-    console.log('Cleared existing SDUD drug data');
+    console.log('Cleared existing medicaid data');
 
-    // Batch processing
-    const batchSize = 500; // Reduced batch size
-    let batch = [];
+    const batchSize = 1000;
+    let medicaidBatch = [];
+    let drugBatch = [];
     let totalImported = 0;
+    let processedRows = 0;
 
     const stream = fs.createReadStream(path.join(__dirname, 'medicaid-sdud-2024.csv'))
       .pipe(csv());
 
     stream.on('data', async (row) => {
-      stream.pause(); // Pause stream to process batch
+      stream.pause();
+      processedRows++;
 
-      const drugName = row['Product Name']?.trim() || '';
-      const ndc = row['NDC']?.trim() || '';
-      const totalReimbursed = parseFloat(row['Total Amount Reimbursed']) || 0;
-      const prescriptions = parseFloat(row['Number of Prescriptions']) || 0;
-      const price = prescriptions > 0 ? totalReimbursed / prescriptions : 0;
+      const utilizationType = row['Utilization Type']?.trim() || '';
       const state = row['State']?.trim() || '';
-      const suppression = row['Suppression Used']?.trim() === 'TRUE';
+      const ndc = row['NDC']?.trim() || '';
+      const labelerCode = row['Labeler Code']?.trim() || '';
+      const productCode = row['Product Code']?.trim() || '';
+      const packageSize = row['Package Size']?.trim() || '';
+      const year = parseInt(row['Year']) || 2024;
+      const quarter = parseInt(row['Quarter']) || 1;
+      const suppressionUsed = row['Suppression Used']?.trim().toLowerCase() === 'true';
+      const productName = row['Product Name']?.trim() || '';
+      const unitsReimbursed = parseFloat(row['Units Reimbursed']) || 0;
+      const numberOfPrescriptions = parseFloat(row['Number of Prescriptions']) || 0;
+      const totalAmountReimbursed = parseFloat(row['Total Amount Reimbursed']) || 0;
+      const medicaidAmountReimbursed = parseFloat(row['Medicaid Amount Reimbursed']) || 0;
+      const nonMedicaidAmountReimbursed = parseFloat(row['Non Medicaid Amount Reimbursed']) || 0;
+      const pricePerUnit = unitsReimbursed > 0 ? totalAmountReimbursed / unitsReimbursed : 0;
 
-      if (drugName && ndc && state && !suppression) {
-        batch.push({
-          drug_name: drugName,
+      if (productName && ndc && state && !suppressionUsed) {
+        medicaidBatch.push({
+          utilizationType,
+          state,
+          ndc,
+          labelerCode,
+          productCode,
+          packageSize,
+          year,
+          quarter,
+          suppressionUsed,
+          productName,
+          unitsReimbursed,
+          numberOfPrescriptions,
+          totalAmountReimbursed,
+          medicaidAmountReimbursed,
+          nonMedicaidAmountReimbursed,
+          pricePerUnit
+        });
+
+        drugBatch.push({
+          drug_name: productName,
           ndc: ndc,
-          price: price,
+          price: pricePerUnit,
           state: state,
-          source: 'SDUD',
+          source: 'MEDICAID_SDUD',
+          labelerCode: labelerCode,
+          productCode: productCode,
+          packageSize: packageSize
         });
       }
 
-      if (batch.length >= batchSize) {
+      if (medicaidBatch.length >= batchSize) {
         try {
-          console.log(`Importing batch of ${batch.length} drugs...`);
-          await Drug.insertMany(batch, { ordered: false });
-          totalImported += batch.length;
-          console.log(`Imported ${totalImported} drugs so far...`);
-          batch = []; // Clear batch
-          global.gc && global.gc(); // Trigger garbage collection if enabled
+          console.log(`Processing batch ${Math.ceil(totalImported / batchSize) + 1}: ${medicaidBatch.length} records (${processedRows} rows processed)`);
+          
+          await MedicaidDrugUtilization.insertMany(medicaidBatch, { ordered: false });
+          await Drug.insertMany(drugBatch, { ordered: false });
+          
+          totalImported += medicaidBatch.length;
+          console.log(`Imported ${totalImported} medicaid records so far...`);
+          
+          medicaidBatch = [];
+          drugBatch = [];
+          global.gc && global.gc();
         } catch (err) {
           console.error('Error inserting batch:', err);
         }
-        stream.resume(); // Resume stream
       }
+      
+      stream.resume();
     })
     .on('end', async () => {
-      // Insert remaining records
-      if (batch.length > 0) {
+      if (medicaidBatch.length > 0) {
         try {
-          console.log(`Importing final batch of ${batch.length} drugs...`);
-          await Drug.insertMany(batch, { ordered: false });
-          totalImported += batch.length;
+          console.log(`Importing final batch of ${medicaidBatch.length} records...`);
+          await MedicaidDrugUtilization.insertMany(medicaidBatch, { ordered: false });
+          await Drug.insertMany(drugBatch, { ordered: false });
+          totalImported += medicaidBatch.length;
         } catch (err) {
           console.error('Error inserting final batch:', err);
         }
       }
-      if (totalImported === 0) {
-        console.log('No valid data found in SDUD CSV');
-      } else {
-        console.log(`Successfully imported ${totalImported} SDUD drugs`);
-      }
+      
+      console.log(`Successfully imported ${totalImported} medicaid drug utilization records from ${processedRows} CSV rows`);
+      
+      console.log('Generating drug product summaries...');
+      await generateDrugProductSummaries();
+      
+      console.log('Generating state summaries...');
+      await generateStateSummaries();
+      
       mongoose.connection.close();
     })
     .on('error', (err) => {
@@ -106,4 +144,112 @@ const importData = async () => {
   }
 };
 
-importData();
+const generateDrugProductSummaries = async () => {
+  try {
+    await DrugProduct.deleteMany({});
+    
+    const pipeline = [
+      {
+        $group: {
+          _id: '$ndc',
+          labelerCode: { $first: '$labelerCode' },
+          productCode: { $first: '$productCode' },
+          packageSize: { $first: '$packageSize' },
+          productName: { $first: '$productName' },
+          totalStates: { $addToSet: '$state' },
+          totalPrescriptions: { $sum: '$numberOfPrescriptions' },
+          totalReimbursed: { $sum: '$totalAmountReimbursed' },
+          prices: { $push: '$pricePerUnit' }
+        }
+      },
+      {
+        $project: {
+          ndc: '$_id',
+          labelerCode: 1,
+          productCode: 1,
+          packageSize: 1,
+          productName: 1,
+          totalStates: { $size: '$totalStates' },
+          totalPrescriptions: 1,
+          totalReimbursed: 1,
+          averagePricePerUnit: { $avg: '$prices' },
+          minPricePerUnit: { $min: '$prices' },
+          maxPricePerUnit: { $max: '$prices' }
+        }
+      }
+    ];
+    
+    const results = await MedicaidDrugUtilization.aggregate(pipeline);
+    
+    if (results.length > 0) {
+      await DrugProduct.insertMany(results, { ordered: false });
+      console.log(`Generated ${results.length} drug product summaries`);
+    }
+  } catch (err) {
+    console.error('Error generating drug product summaries:', err);
+  }
+};
+
+const generateStateSummaries = async () => {
+  try {
+    await StateSummary.deleteMany({});
+    
+    const pipeline = [
+      {
+        $group: {
+          _id: { state: '$state', year: '$year', quarter: '$quarter' },
+          totalDrugs: { $addToSet: '$ndc' },
+          totalPrescriptions: { $sum: '$numberOfPrescriptions' },
+          totalReimbursed: { $sum: '$totalAmountReimbursed' },
+          drugs: {
+            $push: {
+              ndc: '$ndc',
+              productName: '$productName',
+              totalReimbursed: '$totalAmountReimbursed',
+              prescriptions: '$numberOfPrescriptions'
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          state: '$_id.state',
+          year: '$_id.year',
+          quarter: '$_id.quarter',
+          totalDrugs: { $size: '$totalDrugs' },
+          totalPrescriptions: 1,
+          totalReimbursed: 1,
+          averagePricePerPrescription: {
+            $cond: {
+              if: { $gt: ['$totalPrescriptions', 0] },
+              then: { $divide: ['$totalReimbursed', '$totalPrescriptions'] },
+              else: 0
+            }
+          },
+          topDrugs: {
+            $slice: [
+              {
+                $sortArray: {
+                  input: '$drugs',
+                  sortBy: { totalReimbursed: -1 }
+                }
+              },
+              5
+            ]
+          }
+        }
+      }
+    ];
+    
+    const results = await MedicaidDrugUtilization.aggregate(pipeline);
+    
+    if (results.length > 0) {
+      await StateSummary.insertMany(results, { ordered: false });
+      console.log(`Generated ${results.length} state summaries`);
+    }
+  } catch (err) {
+    console.error('Error generating state summaries:', err);
+  }
+};
+
+importMedicaidData();
