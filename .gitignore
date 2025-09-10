@@ -7,3 +7,5 @@ node_modules/
 dist/
 medicaid-sdud-2024.csv
 *.csv
+.env
+uploads/
