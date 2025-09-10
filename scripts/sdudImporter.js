@@ -31,12 +31,23 @@ async function startImport(filePath) {
     let totalImported = 0;
     const abs = filePath || path.join(__dirname, '..', 'medicaid-sdud-2024.csv');
     const stream = fs.createReadStream(abs).pipe(csv());
+
     stream.on('data', (row) => {
-      const drugName = (row['Drug Name'] || row['drug_name'] || '').toString().trim();
+      const suppression = (row['Suppression Used'] || row['suppression'] || '').toString().trim().toUpperCase() === 'TRUE';
+      const drugName = (row['Product Name'] || row['Drug Name'] || row['drug_name'] || '').toString().trim();
       const ndc = (row['NDC'] || row['ndc'] || '').toString().trim();
       const state = (row['State'] || row['state'] || '').toString().trim();
-      const price = parseFloat(row['Price'] || row['price'] || row['nadac_price'] || 0) || 0;
-      if (drugName && ndc) {
+
+      let price = 0;
+      const totalReimbursed = parseFloat((row['Total Amount Reimbursed'] || row['total_reimbursed'] || '').toString().replace(/[, ]/g, '')) || 0;
+      const prescriptions = parseFloat((row['Number of Prescriptions'] || row['prescriptions'] || '').toString().replace(/[, ]/g, '')) || 0;
+      if (prescriptions > 0) {
+        price = totalReimbursed / prescriptions;
+      } else {
+        price = parseFloat(row['Price'] || row['price'] || row['nadac_price'] || 0) || 0;
+      }
+
+      if (!suppression && drugName && ndc && state) {
         batch.push({
           drug_name: drugName.toUpperCase(),
           ndc,
@@ -44,20 +55,22 @@ async function startImport(filePath) {
           state,
           source: 'SDUD'
         });
-        if (batch.length >= batchSize) {
-          stream.pause();
-          Drug.insertMany(batch, { ordered: false }).then(() => {
-            totalImported += batch.length;
-            batch = [];
-            stream.resume();
-          }).catch(() => {
-            totalImported += batch.length;
-            batch = [];
-            stream.resume();
-          });
-        }
+      }
+
+      if (batch.length >= batchSize) {
+        stream.pause();
+        Drug.insertMany(batch, { ordered: false }).then(() => {
+          totalImported += batch.length;
+          batch = [];
+          stream.resume();
+        }).catch(() => {
+          totalImported += batch.length;
+          batch = [];
+          stream.resume();
+        });
       }
     });
+
     stream.on('end', () => {
       if (batch.length > 0) {
         Drug.insertMany(batch, { ordered: false }).then(() => {
@@ -71,6 +84,7 @@ async function startImport(filePath) {
         resolve(totalImported);
       }
     });
+
     stream.on('error', (err) => reject(err));
   });
 }
