@@ -142,6 +142,7 @@ function ensureDb(req, res, next) {
 
 const admin = express.Router();
 admin.use(requireAdmin);
+admin.use(ensureDb);
 
 admin.get('/stats', async (req, res) => {
   try {
