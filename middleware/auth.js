@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const DEV_ADMIN = {
   id: 1,
   username: 'admin',
-  password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // bcrypt hash of 'myhealthprices123@'
+  password: '$2b$10$Ul34CKL6REf1VzfECfPQa.rRZ4V/kBcgyABYNbqXTDboawK56lzki', // bcrypt hash of 'myhealthprices123@'
   email: 'admin@myhealthprices.com'
 };
 
