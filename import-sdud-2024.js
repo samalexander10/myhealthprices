@@ -2,10 +2,15 @@ const mongoose = require('mongoose');
 const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-// Connect to MongoDB Atlas
-mongoose.connect('mongodb+srv://samalexander10:masr0eCwFibJPTbF@myhealthprices.yoafnzw.mongodb.net/myhealthprices?retryWrites=true&w=majority', 
-{
+const uri = process.env.MONGODB_URI;
+if (!uri) {
+  console.error('Missing MONGODB_URI environment variable');
+  process.exit(1);
+}
+
+mongoose.connect(uri, {
   serverSelectionTimeoutMS: 30000,
 }).then(() => {
   console.log('Connected to MongoDB Atlas');
