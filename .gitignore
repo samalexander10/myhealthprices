@@ -1,11 +1,1 @@
-node_modules/
-*npm-debug.log
-*.DS_Store
-dist/bundle.js
-coverage
-node_modules/
-dist/
-medicaid-sdud-2024.csv
-*.csv
-.env
-uploads/
+node_modules
