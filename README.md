@@ -39,7 +39,7 @@ The backend is a **Reactive** system built with **Spring WebFlux**.
 -   **Testing**: JUnit 5, Mockito, Flapdoodle Embedded MongoDB
 
 ### Database
--   **Local Development**: MongoDB (running locally on port 27017)
+-   **Local Development**: MongoDB (Local, Docker, or Embedded) OR MongoDB Atlas (Remote)
 -   **Production (Future)**: MongoDB Atlas (Cloud)
 -   **Data Source**: CMS Medicaid State Drug Utilization Data (SDUD)
 
