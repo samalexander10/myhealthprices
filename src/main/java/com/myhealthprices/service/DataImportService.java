@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
-import org.springframework.data.mongodb.core.aggregation.ConvertOperators;
+
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -116,12 +116,16 @@ public class DataImportService {
                 }).flatMapMany(parser -> Flux.fromIterable((Iterable<CSVRecord>) parser))
                         .map(this::mapRowToUtilization)
                         .filter(item -> item != null)
-                        .buffer(1000) // Buffer for batching
-                        .flatMap(batch -> rawRepo.saveAll((Iterable<MedicaidDrugUtilization>) batch), 10) // Concurrent
-                                                                                                          // saves
+                        .buffer(500) // Smaller buffer to save memory
+                        .flatMap(batch -> rawRepo.saveAll((Iterable<MedicaidDrugUtilization>) batch), 2) // Lower
+                                                                                                         // concurrency
                         .then())
                 .doOnSuccess(x -> log.info("Raw import completed. Starting optimization..."))
                 .flatMap(x -> optimizeData())
+                .then(Mono.defer(() -> {
+                    log.info("Optimization complete. Deleting raw data to free space...");
+                    return rawRepo.deleteAll();
+                }))
                 .onErrorResume(e -> {
                     log.error("Import failed", e);
                     return Mono.error(e);
@@ -177,11 +181,11 @@ public class DataImportService {
 
     private Mono<Void> generateDrugDefinitions() {
         Aggregation agg = Aggregation.newAggregation(
-                Aggregation.group("NDC")
-                        .first("Product Name").as("name")
-                        .first("NDC").as("ndc")
-                        .first("Labeler Code").as("labeler")
-                        .first("Package Size").as("packageSize"))
+                Aggregation.group("ndc")
+                        .first("pn").as("name")
+                        .first("ndc").as("ndc")
+                        .first("lc").as("labeler")
+                        .first("ps").as("packageSize"))
                 .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
 
         return definitionRepo.deleteAll().then(
@@ -199,17 +203,16 @@ public class DataImportService {
 
     private Mono<Void> generateDrugPrices() {
         Aggregation agg = Aggregation.newAggregation(
-                // Filter out records with empty or null strings for calculations
-                Aggregation.match(Criteria.where("Total Amount Reimbursed").exists(true).ne("")
-                        .and("Units Reimbursed").exists(true).ne("").ne("0").ne(".000")),
-                // Project and convert strings to numbers
+                // Filter out records with invalid units for calculations
+                Aggregation.match(Criteria.where("ur").gt(0.0)),
+                // Project fields directly (they are already typed correctly in the DB)
                 Aggregation.project()
-                        .and("NDC").as("ndc")
-                        .and("State").as("state")
-                        .and(ConvertOperators.ToInt.toInt("$Year")).as("year")
-                        .and(ConvertOperators.ToInt.toInt("$Quarter")).as("quarter")
-                        .and(ConvertOperators.ToDouble.toDouble("$Total Amount Reimbursed")).as("totalAmt")
-                        .and(ConvertOperators.ToDouble.toDouble("$Units Reimbursed")).as("units"),
+                        .and("ndc").as("ndc")
+                        .and("st").as("state")
+                        .and("y").as("year")
+                        .and("q").as("quarter")
+                        .and("tar").as("totalAmt")
+                        .and("ur").as("units"),
                 Aggregation.project("ndc", "state", "year", "quarter")
                         .and(ArithmeticOperators.Divide.valueOf("totalAmt")
                                 .divideBy("units"))

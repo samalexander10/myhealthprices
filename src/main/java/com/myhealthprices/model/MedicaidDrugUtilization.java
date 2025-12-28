@@ -12,38 +12,38 @@ public class MedicaidDrugUtilization {
     @Id
     private String id;
 
-    @Field("Utilization Type")
+    @Field("ut")
     private String utilizationType;
     @Indexed
-    @Field("State")
+    @Field("st")
     private String state;
     @Indexed
-    @Field("NDC")
+    @Field("ndc")
     private String ndc;
-    @Field("Labeler Code")
+    @Field("lc")
     private String labelerCode;
-    @Field("Product Code")
+    @Field("pc")
     private String productCode;
-    @Field("Package Size")
+    @Field("ps")
     private String packageSize;
     @Indexed
-    @Field("Year")
+    @Field("y")
     private Integer year;
-    @Field("Quarter")
+    @Field("q")
     private Integer quarter;
-    @Field("Suppression Used")
+    @Field("su")
     private Boolean suppressionUsed;
-    @Field("Product Name")
+    @Field("pn")
     private String productName;
-    @Field("Units Reimbursed")
+    @Field("ur")
     private Double unitsReimbursed;
-    @Field("Number of Prescriptions")
+    @Field("nop")
     private Double numberOfPrescriptions;
-    @Field("Total Amount Reimbursed")
+    @Field("tar")
     private Double totalAmountReimbursed;
-    @Field("Medicaid Amount Reimbursed")
+    @Field("mar")
     private Double medicaidAmountReimbursed;
-    @Field("Non Medicaid Amount Reimbursed")
+    @Field("nmar")
     private Double nonMedicaidAmountReimbursed;
 
     private Double pricePerUnit;
