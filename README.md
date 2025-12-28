@@ -100,5 +100,18 @@ npm run dev
 ```
 *The app will be accessible at `http://localhost:5173`*
 
+### 4. Running with MongoDB Atlas (Remote)
+To connect to a remote MongoDB Atlas cluster instead of the local database:
+
+1.  **Get your connection string** from MongoDB Atlas. It will look like:
+    `mongodb+srv://<username>:<password>@cluster0.example.mongodb.net/myhealthprices?retryWrites=true&w=majority`
+2.  **Run the backend** with the `SPRING_DATA_MONGODB_URI` environment variable:
+
+    ```bash
+    SPRING_DATA_MONGODB_URI="mongodb+srv://<user>:<pass>@cluster.mongodb.net/myhealthprices" mvn spring-boot:run
+    ```
+
+    *Alternatively, you can update `src/main/resources/application.properties` with the URI.*
+
 ## Future Deployment
 Deployment configurations for **Heroku** or **AWS** will be added in upcoming releases. The architecture is cloud-ready, with the Spring Boot application containerizable via Docker and the React frontend deployable to any static site host or CDN.
